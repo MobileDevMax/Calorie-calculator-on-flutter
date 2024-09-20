@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(CalorieCalculatorApp());
+}
+
+class CalorieCalculatorApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Calorie calculator',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: CalorieCalculatorHomePage(),
+    );
+  }
+}
+
+class CalorieCalculatorHomePage extends StatefulWidget {
+  @override
+  _CalorieCalculatorHomePageState createState() =>
+      _CalorieCalculatorHomePageState();
+}
+
+class _CalorieCalculatorHomePageState
+    extends State<CalorieCalculatorHomePage> {
+  final _weightController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _ageController = TextEditingController();
+  String _gender = 'Male';
+  String _activityLevel = 'Sedentary';
+  double _calories = 0;
+
+  void _calculateCalories() {
+    final double weight = double.tryParse(_weightController.text) ?? 0;
+    final double height = double.tryParse(_heightController.text) ?? 0;
+    final int age = int.tryParse(_ageController.text) ?? 0;
+
+    if (weight <= 0 || height <= 0 || age <= 0) {
+      setState(() {
+        _calories = 0;
+      });
+      return;
+    }
+
+    // BMR Calculation
+    double bmr;
+    if (_gender == 'Male') {
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+
+    // Activity coefficient
+    double activityFactor;
+    switch (_activityLevel) {
+      case 'Sedentary':
+        activityFactor = 1.2;
+        break;
+      case 'Low activity':
+        activityFactor = 1.375;
+        break;
+      case 'Moderate activity':
+        activityFactor = 1.55;
+        break;
+      case 'High activity':
+        activityFactor = 1.725;
+        break;
+      case 'Very high activity':
+        activityFactor = 1.9;
+        break;
+      default:
+        activityFactor = 1.2;
+    }
+
+    setState(() {
+      _calories = bmr * activityFactor;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Calorie calculator'),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            TextField(
+              controller: _weightController,
+              decoration: InputDecoration(labelText: 'Weight (kg)'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _heightController,
+              decoration: InputDecoration(labelText: 'Height (cm)'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _ageController,
+              decoration: InputDecoration(labelText: 'Age (years)'),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 10),
+            Text('Gender:'),
+            DropdownButton<String>(
+              value: _gender,
+              items: <String>['Male', 'Female'].map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _gender = newValue!;
+                });
+              },
+            ),
+            SizedBox(height: 10),
+            Text('Activity level:'),
+            DropdownButton<String>(
+              value: _activityLevel,
+              items: <String>[
+                'Sedentary',
+                'Low activity',
+                'Moderate activity',
+                'High activity',
+                'Very high activity'
+              ].map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _activityLevel = newValue!;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _calculateCalories,
+              child: Text('Calculate calories'),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Your calories: ${_calories.toStringAsFixed(2)} kcal/day',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
